@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 
 N = 50
-SPEED = 100
+INTERVAl = 50
 PROB_LIFE = 40
+FPS = 30
 
 # frameNum - this is handled by the animation, don't change this.
 # img - the plot that is passed and changed, don't change this.
@@ -40,7 +41,7 @@ def update(frameNum, img, world, N):
     return img
 
 
-if __name__ == '__main__':
+def gen_world():
     # TODO: População inicial invés de randomica
     world = np.random.choice(
         [0, 255],
@@ -49,8 +50,21 @@ if __name__ == '__main__':
     ).reshape(N, N)
 
     fig, ax = plt.subplots()
+    ax.grid()
+    ax.set_xticks(np.arange(0.5, N))
+    ax.set_yticks(np.arange(0.5, N))
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+
     img = ax.imshow(world, interpolation='nearest')
-    a = animation.FuncAnimation(fig, update, fargs=(
-        img, world, N), frames=30, interval=SPEED, save_count=50)
+
+    return fig, img, world
+
+
+if __name__ == '__main__':
+    fig, img, world = gen_world()
+
+    ani = animation.FuncAnimation(fig, update, fargs=(
+        img, world, N), frames=FPS, interval=INTERVAl)
 
     plt.show()
