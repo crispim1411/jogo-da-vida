@@ -1,11 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
+from samples import glider, blinker
 
 N = 50
 INTERVAl = 50
 PROB_LIFE = 40
 FPS = 30
+
+random_world = np.random.choice(
+    [0, 255],
+    N*N,
+    p=[1-(PROB_LIFE/100), (PROB_LIFE)/100]
+).reshape(N, N)
 
 # frameNum - this is handled by the animation, don't change this.
 # img - the plot that is passed and changed, don't change this.
@@ -41,13 +48,12 @@ def update(frameNum, img, world, N):
     return img
 
 
-def gen_world():
-    # TODO: População inicial invés de randomica
-    world = np.random.choice(
-        [0, 255],
-        N*N,
-        p=[1-(PROB_LIFE/100), (PROB_LIFE)/100]
-    ).reshape(N, N)
+def gen_world(world=random_world):
+    if world is not None:
+        X = np.zeros((N, N))
+        x_len, y_len = world.shape
+        X[:x_len, :y_len] = world
+        world = X
 
     fig, ax = plt.subplots()
     ax.grid()
@@ -62,7 +68,7 @@ def gen_world():
 
 
 if __name__ == '__main__':
-    fig, img, world = gen_world()
+    fig, img, world = gen_world(glider)
 
     ani = animation.FuncAnimation(fig, update, fargs=(
         img, world, N), frames=FPS, interval=INTERVAl)
