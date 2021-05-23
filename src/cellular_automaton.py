@@ -9,7 +9,7 @@ PROB_LIFE = 40
 FPS = 30
 
 random_world = np.random.choice(
-    [0, 255],
+    [0, 1],
     N*N,
     p=[1-(PROB_LIFE/100), (PROB_LIFE)/100]
 ).reshape(N, N)
@@ -32,16 +32,17 @@ def update(frameNum, img, world, N):
         for j in range(N):
             # opçao sem borda infinita
             total = (
-                world[(i-1) % N][(j-1) % N] + world[(i-1) % N][j] + world[(i-1) % N][(j+1) % N] +
-                world[i][(j-1) % N] + world[i][(j+1) % N] + world[(i+1) % N][(j-1) % N] +
-                world[(i+1) % N][j] + world[(i+1) % N][(j+1) % N])/255
+                world[(i-1) % N][(j-1) % N] + world[(i-1) % N][j] +
+                world[(i-1) % N][(j+1) % N] + world[i][(j-1) % N] +
+                world[i][(j+1) % N] + world[(i+1) % N][(j-1) % N] +
+                world[(i+1) % N][j] + world[(i+1) % N][(j+1) % N])
 
-            if world[i][j] == 255:
+            if world[i][j] == 1:
                 if total > 3 or total < 2:
                     newWorld[i][j] = 0
             else:
                 if total == 3:
-                    newWorld[i][j] = 255
+                    newWorld[i][j] = 1
 
     img.set_data(newWorld)
     world[:] = newWorld[:]
