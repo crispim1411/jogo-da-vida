@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
-from samples import glider, blinker
+from math import ceil
+import sys
+from samples import *
 
 N = 50
 INTERVAl = 50
@@ -53,7 +55,8 @@ def gen_world(world=random_world):
     if world is not None:
         X = np.zeros((N, N))
         x_len, y_len = world.shape
-        X[:x_len, :y_len] = world
+        X[ceil((N-x_len)/2):ceil((N+x_len)/2),
+          ceil((N-y_len)/2):ceil((N+y_len)/2)] = world
         world = X
 
     fig, ax = plt.subplots()
@@ -69,7 +72,16 @@ def gen_world(world=random_world):
 
 
 if __name__ == '__main__':
-    fig, img, world = gen_world(glider)
+    if len(sys.argv) > 1:
+        if sys.argv[1] not in globals():
+            print("Item não existe")
+            sys.exit(1)
+        item = globals()[sys.argv[1]]
+        elem = np.array(item)
+    else:
+        elem = random_world
+
+    fig, img, world = gen_world(elem)
 
     ani = animation.FuncAnimation(fig, update, fargs=(
         img, world, N), frames=FPS, interval=INTERVAl)
