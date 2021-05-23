@@ -55,6 +55,9 @@ def gen_world(world=random_world):
     if world is not None:
         X = np.zeros((N, N))
         x_len, y_len = world.shape
+        if x_len > N or y_len > N:
+            print("Grid não suporta as dimensões do elemento.")
+            sys.exit(1)
         X[ceil((N-x_len)/2):ceil((N+x_len)/2),
           ceil((N-y_len)/2):ceil((N+y_len)/2)] = world
         world = X
