@@ -5,8 +5,8 @@ from math import ceil
 import sys
 from samples import *
 
-N = 50
-INTERVAl = 50
+N = 20
+INTERVAl = 100
 PROB_LIFE = 40
 FPS = 30
 
