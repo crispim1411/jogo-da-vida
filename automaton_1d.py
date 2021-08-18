@@ -24,12 +24,15 @@ def run (rule, title):
         B[i] = new_values
         values = new_values
 
-    plt.figure()
-    plt.title(title)
-    plt.imshow(B)
-    
-rule18 = lambda p,q,r: True if (p, q, r) in [(1,0,0), (0,0,1)] else False
-run(rule18, 'Rule 18')
+    fig, ax = plt.subplots()
+    ax.set_title(title)
+    ax.matshow(B, cmap=plt.cm.binary)
+
+rule45 = lambda p,q,r: True if bool(p) ^ bool(q or not r) else False
+run(rule45, 'Rule 45')
+
+rule57 = lambda p,q,r: True if bool(p or not r) ^ bool(q) else False
+run(rule57, 'Rule 57')
 
 rule90 = lambda p,q,r: True if p != r else False
 run(rule90, 'Rule 90')
