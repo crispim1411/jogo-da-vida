@@ -13,9 +13,13 @@ def update(vector, rule):
             new_values[i] = 1
     return new_values
 
-def run (rule, title):
-    initial_vector = np.zeros(N)
-    initial_vector[N//2] = 1
+def run (rule, title, random=False):
+    if random:
+        initial_vector = np.around(rand(N))
+    else:
+        initial_vector = np.zeros(N)
+        initial_vector[N//2] = 1
+
     B = np.zeros((STEPS, N))
     B[0] = initial_vector.copy()
     values = initial_vector
@@ -28,16 +32,17 @@ def run (rule, title):
     ax.set_title(title)
     ax.matshow(B, cmap=plt.cm.binary)
 
-rule45 = lambda p,q,r: True if bool(p) ^ bool(q or not r) else False
-run(rule45, 'Rule 45')
 
-rule57 = lambda p,q,r: True if bool(p or not r) ^ bool(q) else False
-run(rule57, 'Rule 57')
+rule160 = lambda p,q,r: True if p and r else False
+run(rule160, 'Regra 160 - Classe 1', random=True)
 
-rule90 = lambda p,q,r: True if p != r else False
-run(rule90, 'Rule 90')
+rule90 = lambda p,q,r: True if (p + r) % 2 else False
+run(rule90, 'Regra 90 - Classe 2')
 
-rule150 = lambda p,q,r: True if (p,q,r).count(1) in [3, 1] else False
-run(rule150, 'Rule 150')
+rule75 = lambda p,q,r: True if bool(p) ^ bool(not q or r) else False
+run(rule75, 'Regra 75 - Classe 3')
+
+rule110 = lambda p,q,r: True if bool(not p and q and r) ^ bool(q) ^ bool(r) else False
+run(rule110, 'Regra 110 - Classe 4')
 
 plt.show()
