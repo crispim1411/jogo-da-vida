@@ -5,9 +5,9 @@ from math import ceil
 import sys
 from samples import *
 
-N = 20
+N = 70
 INTERVAl = 100
-PROB_LIFE = 40
+PROB_LIFE = 30
 FPS = 30
 
 random_world = np.random.choice(
@@ -21,7 +21,6 @@ random_world = np.random.choice(
 # world - the two-D array that represents the world for the
 #         game of life. This will be updated to the next gen.
 # N - the size of the world (which is square).
-
 
 def update(frameNum, img, world, N):
     newWorld = world.copy()
@@ -39,6 +38,7 @@ def update(frameNum, img, world, N):
                 world[i][(j+1) % N] + world[(i+1) % N][(j-1) % N] +
                 world[(i+1) % N][j] + world[(i+1) % N][(j+1) % N])
 
+            # REGRAS     
             if world[i][j] == 1:
                 if total > 3 or total < 2:
                     newWorld[i][j] = 0
