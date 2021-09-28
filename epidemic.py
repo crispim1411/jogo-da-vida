@@ -89,42 +89,70 @@ def gen_world(world):
 
     return fig, img, world
 
+def epidemic_value(cell):
+    """Retorna valor de transmissão da célula"""
+    inf = cell[1]
+    imf = cell[2]
+    # está imune
+    if imf != 0:
+        return 0
+    # suscetível ou infectada
+    return cell[0]
+
 def update(frameNum, img, world, N):
-    world[np.isnan(world)] = 0
     new_world = world.copy()
     for i in range(N):
         for j in range(N):
-            # definir regra de transição
-            diagonals = world[(i-1) % N][(j-1) % N] + \
-                        world[(i-1) % N][(j+1) % N] + \
-                        world[(i+1) % N][(j-1) % N] + \
-                        world[(i+1) % N][(j+1) % N] \
+            # check flags
+            inf = world[i][j][1] # infectado
+            imf = world[i][j][2] # imunizado
 
-            nearest = world[(i+1) % N][j] + \
-                      world[(i-1) % N][j] + \
-                      world[i][(j+1) % N] + \
-                      world[i][(j-1) % N]
+            # suscetível
+            if imf == 0:
+                diagonals = epidemic_value(world[(i-1) % N][(j-1) % N]) + \
+                            epidemic_value(world[(i-1) % N][(j+1) % N]) + \
+                            epidemic_value(world[(i+1) % N][(j-1) % N]) + \
+                            epidemic_value(world[(i+1) % N][(j+1) % N]) 
+                    
+                nearest = epidemic_value(world[(i+1) % N][j]) + \
+                          epidemic_value(world[(i-1) % N][j]) + \
+                          epidemic_value(world[i][(j+1) % N]) + \
+                          epidemic_value(world[i][(j-1) % N])
 
-            next_value = world[i][j] + K*nearest + L*diagonals
-            if np.isnan(next_value):
-                import pdb; pdb.set_trace()
-            new_world[i][j] = to_discrete_value(next_value)
+                cell_value = epidemic_value(world[i][j])
+                next_value = cell_value + K*nearest + L*diagonals
+                if next_value > 0:
+                    new_world[i][j][1] = T_IN
+                new_world[i][j][0] = to_discrete_value(next_value)
+            else:
+                new_world[i][j][0] = 0
 
-    new_world[np.isnan(new_world)] = 0
-    img.set_data(new_world)
+            # disease tick
+            if inf > 0:
+                if inf == 1:
+                    new_world[i][j][2] = T_IM
+                    new_world[i][j][0] = 0
+                new_world[i][j][1] = inf - 1
+            elif imf > 0:
+                new_world[i][j][2] = imf - 1
+
+            # if 47<i<52 and 47<j<52:
+            #     print(f"({i},{j}) / cell:{new_world[i][j]} / nearest:{nearest} / diagonal:{diagonals}")
+
+    img.set_data(new_world[:,:,0])
     world[:] = new_world[:]
     
     return img
 
 if __name__ == '__main__':
     # gerando um mundo randômico com estados de 0 a 1.0
-    initial_values = np.random.choice(
-        [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-        N*N,
-        p=[.95, .05, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ).reshape(N, N)
-    # initial_values = np.zeros((N,N))
-    # initial_values[N//2][N//2] = 0.1
+    # initial_values = np.random.choice(
+    #     [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+    #     (N,N,3),
+    #     p=[.95, .05, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    # ).reshape(N, N, 3)
+    initial_values = np.zeros(N*N*3).reshape(N,N,3)
+    initial_values[N//2][N//2] = np.array([0.1, T_IN, 0])
 
     fig, img, world = gen_world(initial_values)
 
