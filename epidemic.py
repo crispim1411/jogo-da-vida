@@ -38,10 +38,9 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib import animation
 
-N = 100
-INTERVAl = 500
-# PROB_LIFE = 30
-FPS = 30
+N = 30
+INTERVAl = 1000
+FPS = 40
 
 # Variáveis segundo o artigo
 K = 0.44
@@ -107,6 +106,18 @@ def update(frameNum, img, world, N):
             inf = world[i][j][1] # infectado
             imf = world[i][j][2] # imunizado
 
+            # disease tick t+1
+            if inf > 0:
+                if inf == 1:
+                    imf = T_IM
+                inf -= 1
+            elif imf > 0:
+                imf -= 1
+                
+            # atualiza
+            new_world[i][j][1] = inf
+            new_world[i][j][2] = imf
+
             # suscetível
             if imf == 0:
                 diagonals = epidemic_value(world[(i-1) % N][(j-1) % N]) + \
@@ -119,25 +130,18 @@ def update(frameNum, img, world, N):
                           epidemic_value(world[i][(j+1) % N]) + \
                           epidemic_value(world[i][(j-1) % N])
 
-                cell_value = epidemic_value(world[i][j])
-                next_value = cell_value + K*nearest + L*diagonals
-                if next_value > 0:
-                    new_world[i][j][1] = T_IN
-                new_world[i][j][0] = to_discrete_value(next_value)
+                cell_value = world[i][j][0]
+                value = cell_value + K*nearest + L*diagonals
+                if value > 0 and inf == 0:
+                    # se torna infectada
+                    new_world[i][j][1] = T_IN 
+                new_world[i][j][0] = to_discrete_value(value)
             else:
+                # está imunizada
                 new_world[i][j][0] = 0
 
-            # disease tick
-            if inf > 0:
-                if inf == 1:
-                    new_world[i][j][2] = T_IM
-                    new_world[i][j][0] = 0
-                new_world[i][j][1] = inf - 1
-            elif imf > 0:
-                new_world[i][j][2] = imf - 1
-
-            # if 47<i<52 and 47<j<52:
-            #     print(f"({i},{j}) / cell:{new_world[i][j]} / nearest:{nearest} / diagonal:{diagonals}")
+            if 12<i<18 and 12<j<18:
+                print(f"({i},{j}) / cell:{new_world[i][j]} / nearest:{nearest:.1f} / diagonal:{diagonals:.1f}")
 
     img.set_data(new_world[:,:,0])
     world[:] = new_world[:]
@@ -156,6 +160,7 @@ if __name__ == '__main__':
 
     fig, img, world = gen_world(initial_values)
 
+    print(f"Initial state (15,15) / cell: [0.1, {T_IN}, 0.0] / nearest:0.0 / diagonal:0.0")
     ani = animation.FuncAnimation(fig, update, fargs=(
         img, world, N), frames=FPS, interval=INTERVAl)
 
