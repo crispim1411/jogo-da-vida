@@ -51,13 +51,31 @@ T_IN = 5
 T_IM = 10
 
 def to_discrete_value(value):
-    # evitar erro de precisão do float
-    # checa se múltiplo de 0.1
-    if value != 0.0:
-        if value*10 % 1 == 0: 
-            return value + 0.1
-        else:
-            return round(value, 1)
+    """Adequa os valores nos intervalos discretos
+    Ex: 0.1 <= 0.122 < 0.2 -> 0.2
+    """
+    if value >= 0.9:
+        return 1.0
+    elif value >= 0.8:
+        return 0.9
+    elif value >= 0.7:
+        return 0.8
+    elif value >= 0.6:
+        return 0.7
+    elif value >= 0.5:
+        return 0.6
+    elif value >= 0.4:
+        return 0.5
+    elif value >= 0.3:
+        return 0.4
+    elif value >= 0.2:
+        return 0.3
+    elif value >= 0.1:
+        return 0.2
+    elif value > 0.0:
+        return 0.1
+    else:
+        return 0
 
 def gen_world(world):
     fig, ax = plt.subplots()
