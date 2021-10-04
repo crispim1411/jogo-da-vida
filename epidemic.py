@@ -83,8 +83,8 @@ def gen_world(world):
     ax.set_yticks(np.arange(0.5, N))
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    img = ax.imshow(world, interpolation='nearest', vmin=0., vmax=1.)
-    plt.colorbar(img)
+    img = ax.imshow(world, cmap='Greys', vmin=0., vmax=1.)
+    fig.colorbar(img)
 
     return fig, img, world
 
@@ -98,7 +98,24 @@ def epidemic_value(cell):
     # suscetível ou infectada
     return cell[0]
 
+counter = 0
 def update(frameNum, img, world, N):
+    global counter
+    if counter%10==0:
+        fig, ax = plt.subplots()
+        ax.grid()
+        ax.set_xticks(np.arange(0.5, N))
+        ax.set_yticks(np.arange(0.5, N))
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        fig.suptitle(f'Step {counter}')
+        plt.imshow(world[:,:,0], cmap='Greys')
+        plt.show()
+
+    # tick counter
+    counter += 1
+
+    # update world
     new_world = world.copy()
     for i in range(N):
         for j in range(N):
@@ -120,15 +137,26 @@ def update(frameNum, img, world, N):
 
             # suscetível
             if imf == 0:
-                diagonals = epidemic_value(world[(i-1) % N][(j-1) % N]) + \
-                            epidemic_value(world[(i-1) % N][(j+1) % N]) + \
-                            epidemic_value(world[(i+1) % N][(j-1) % N]) + \
-                            epidemic_value(world[(i+1) % N][(j+1) % N]) 
-                    
-                nearest = epidemic_value(world[(i+1) % N][j]) + \
-                          epidemic_value(world[(i-1) % N][j]) + \
-                          epidemic_value(world[i][(j+1) % N]) + \
-                          epidemic_value(world[i][(j-1) % N])
+                if BORDER:
+                    diagonals = (epidemic_value(world[i-1][j-1]) if i!=0 and j!=0 else 0) + \
+                                (epidemic_value(world[i-1][j+1]) if i!=0 and j!=N-1 else 0) + \
+                                (epidemic_value(world[i+1][j-1]) if i!=N-1 and j!=0 else 0)  + \
+                                (epidemic_value(world[i+1][j+1]) if i!=N-1 and j!=N-1 else 0)
+            
+                    nearest = (epidemic_value(world[i+1][j]) if i!=N-1 else 0) + \
+                            (epidemic_value(world[i-1][j]) if i!=0 else 0) + \
+                            (epidemic_value(world[i][j+1]) if j!=N-1 else 0) + \
+                            (epidemic_value(world[i][j-1]) if j!=0 else 0)
+                else:
+                    diagonals = epidemic_value(world[(i-1) % N][(j-1) % N]) + \
+                                epidemic_value(world[(i-1) % N][(j+1) % N]) + \
+                                epidemic_value(world[(i+1) % N][(j-1) % N]) + \
+                                epidemic_value(world[(i+1) % N][(j+1) % N]) 
+
+                    nearest = epidemic_value(world[(i+1) % N][j]) + \
+                            epidemic_value(world[(i-1) % N][j]) + \
+                            epidemic_value(world[i][(j+1) % N]) + \
+                            epidemic_value(world[i][(j-1) % N])
 
                 cell_value = world[i][j][0]
                 value = cell_value + K*nearest + L*diagonals
@@ -140,28 +168,23 @@ def update(frameNum, img, world, N):
                 # está imunizada
                 new_world[i][j][0] = 0
 
-            if 12<i<18 and 12<j<18:
-                print(f"({i},{j}) / cell:{new_world[i][j]} / nearest:{nearest:.1f} / diagonal:{diagonals:.1f}")
-
     img.set_data(new_world[:,:,0])
     world[:] = new_world[:]
     
     return img
 
 if __name__ == '__main__':
-    # gerando um mundo randômico com estados de 0 a 1.0
-    # initial_values = np.random.choice(
-    #     [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-    #     (N,N,3),
-    #     p=[.95, .05, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    # ).reshape(N, N, 3)
     initial_values = np.zeros(N*N*3).reshape(N,N,3)
+    # seta valores iniciais
+    initial_values[0][0] = np.array([0.1, T_IN, 0])
     initial_values[N//2][N//2] = np.array([0.1, T_IN, 0])
 
+    # definição das variáveis de plotagem
     fig, img, world = gen_world(initial_values)
+    init_f = lambda: img.set_data(world)
 
-    print(f"Initial state (15,15) / cell: [0.1, {T_IN}, 0.0] / nearest:0.0 / diagonal:0.0")
-    ani = animation.FuncAnimation(fig, update, fargs=(
-        img, world, N), frames=FPS, interval=INTERVAl)
+    # animação
+    ani = animation.FuncAnimation(fig, update, init_func=init_f, 
+    fargs=(img, world, N), frames=15, interval=INTERVAl)
 
     plt.show()
