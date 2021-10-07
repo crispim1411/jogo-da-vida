@@ -41,13 +41,14 @@ from matplotlib import animation
 N = 30
 INTERVAl = 1000
 FPS = 40
+BORDER = True
 
 # Variáveis segundo o artigo
 K = 0.44
 L = 0.04
 Tc = 40
-T_IN = 5 
-T_IM = 10
+T_IN = 5
+T_IM = 15
 
 def to_discrete_value(value):
     """Adequa os valores nos intervalos discretos
@@ -76,18 +77,6 @@ def to_discrete_value(value):
     else:
         return 0
 
-def gen_world(world):
-    fig, ax = plt.subplots()
-    ax.grid()
-    ax.set_xticks(np.arange(0.5, N))
-    ax.set_yticks(np.arange(0.5, N))
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    img = ax.imshow(world, cmap='Greys', vmin=0., vmax=1.)
-    fig.colorbar(img)
-
-    return fig, img, world
-
 def epidemic_value(cell):
     """Retorna valor de transmissão da célula"""
     inf = cell[1]
@@ -98,24 +87,8 @@ def epidemic_value(cell):
     # suscetível ou infectada
     return cell[0]
 
-counter = 0
-def update(frameNum, img, world, N):
-    global counter
-    if counter%10==0:
-        fig, ax = plt.subplots()
-        ax.grid()
-        ax.set_xticks(np.arange(0.5, N))
-        ax.set_yticks(np.arange(0.5, N))
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        fig.suptitle(f'Step {counter}')
-        plt.imshow(world[:,:,0], cmap='Greys')
-        plt.show()
-
-    # tick counter
-    counter += 1
-
-    # update world
+def tick(world):
+    """ update world """
     new_world = world.copy()
     for i in range(N):
         for j in range(N):
@@ -167,24 +140,74 @@ def update(frameNum, img, world, N):
             else:
                 # está imunizada
                 new_world[i][j][0] = 0
+    return new_world
 
+def update(frameNum, img, world, N):
+    new_world = tick(world)
     img.set_data(new_world[:,:,0])
     world[:] = new_world[:]
     
     return img
 
-if __name__ == '__main__':
-    initial_values = np.zeros(N*N*3).reshape(N,N,3)
-    # seta valores iniciais
-    initial_values[0][0] = np.array([0.1, T_IN, 0])
-    initial_values[N//2][N//2] = np.array([0.1, T_IN, 0])
+def animation_CA(world):
+    fig, ax = plt.subplots()
+    ax.grid()
+    ax.set_xticks(np.arange(0.5, N))
+    ax.set_yticks(np.arange(0.5, N))
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    img = ax.imshow(world, vmin=0., vmax=1.)
+    fig.colorbar(img)
+    ani = animation.FuncAnimation(fig, update, fargs=(img, world, N), frames=15, interval=INTERVAl)
+    return ani
 
+def gen_plots(world):
     # definição das variáveis de plotagem
-    fig, img, world = gen_world(initial_values)
-    init_f = lambda: img.set_data(world)
+    fig, axes = plt.subplots(2,2)
+    gen_axes = (a for a in axes.ravel().tolist())
+    infected = np.ndarray(Tc)
+    immunized = np.ndarray(Tc)
 
-    # animação
-    ani = animation.FuncAnimation(fig, update, init_func=init_f, 
-    fargs=(img, world, N), frames=15, interval=INTERVAl)
+    counter = 0
+    plot_counter = 1
+    for i in range(Tc):
+        if i % 10 == 0 and plot_counter<=4:
+            ax = next(gen_axes) 
+            ax.grid()
+            ax.set_xticks(np.arange(0.5, N))
+            ax.set_yticks(np.arange(0.5, N))
+            ax.set_xticklabels([])
+            ax.set_yticklabels([])
+            ax.title.set_text(f'Step {counter}')
+            im = ax.imshow(world[:,:,0], cmap='Greys')
+            plot_counter += 1
+        
+        world = tick(world)
+        infected[counter] = np.count_nonzero(world[:,:,1])
+        immunized[counter] = np.count_nonzero(world[:,:,2])
+        counter += 1
+    fig.colorbar(im, ax=axes.ravel().tolist())
+
+    # infectados e imunizados
+    fig, (ax1, ax2) = plt.subplots(2)
+    ax1.title.set_text('Infectados')
+    plt.xticks(range(0,Tc,5))
+    ax1.plot(infected, 'r-o')
+    ax2.title.set_text('Imunizados')
+    ax2.plot(immunized, 'b-o')
+
+if __name__ == '__main__':
+    # formato do mundo
+    # matrix N x N onde cada dado
+    # C -> {P; t_in; t_tim}
+    world = np.zeros(N*N*3).reshape(N,N,3)
+
+    # seta valores iniciais
+    world[0][0] = np.array([0.1, T_IN, 0])
+    # world[N//2][N//2] = np.array([0.1, T_IN, 0])
+
+    ani = animation_CA(world)
+    gen_plots(world)
 
     plt.show()
+   
