@@ -193,32 +193,38 @@ def iterate(world):
             im = ax.imshow(world[:,:,0], cmap='Greys')
             plot_counter += 1
         
-        world = tick(world)
         infected[counter] = np.count_nonzero(world[:,:,1])
         immunized[counter] = np.count_nonzero(world[:,:,2])
-        counter += 1
+        world = tick(world)
+        # counter += 1
     fig.colorbar(im, ax=axes.ravel().tolist())
 
     # infectados e imunizados
     fig, (ax1, ax2) = plt.subplots(2)
-    ax1.title.set_text('Infectados')
     plt.xticks(range(0,Tc,5))
+    # ax1.title.set_text('Infectados')
     ax1.plot(infected, 'r-o')
-    ax2.title.set_text('Imunizados')
+    ax1.set_xlabel('Steps')
+    ax1.set_ylabel('Infectados')
+    # ax2.title.set_text('Imunizados')
     ax2.plot(immunized, 'b-o')
+    ax2.set_xlabel('Steps')
+    ax2.set_ylabel('Imunizados')
 
 if __name__ == '__main__':
     # formato do mundo
     # matrix N x N onde cada dado
-    # C -> {P; t_in; t_tim}
+    # C -> {P; c_in; c_tim}
     world = np.zeros(N*N*3).reshape(N,N,3)
 
     # seta valores iniciais
-    world[0][0] = np.array([0.1, T_IN, 0])
+    # world[0][0] = np.array([0.1, T_IN, 0])
     # world[N//2][N//2] = np.array([0.1, T_IN, 0])
+    world[4*N//5][4*N//5] = np.array([0.1, T_IN, 0])
+    world[N//5][N//5] = np.array([0.1, T_IN, 0])
 
-    ani = animation_CA(world)
-    gen_plots(world)
+    # ani = animation_CA(world)
+    iterate(world)
 
     plt.show()
    
