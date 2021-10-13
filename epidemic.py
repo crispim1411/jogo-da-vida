@@ -48,7 +48,9 @@ K = 0.44
 L = 0.04
 Tc = 40
 T_IN = 5
-T_IM = 15
+T_IM = 5
+
+counter = 0
 
 def to_discrete_value(value):
     """Adequa os valores nos intervalos discretos
@@ -89,6 +91,8 @@ def epidemic_value(cell):
 
 def tick(world):
     """ update world """
+    global counter
+    counter += 1
     new_world = world.copy()
     for i in range(N):
         for j in range(N):
@@ -140,6 +144,13 @@ def tick(world):
             else:
                 # está imunizada
                 new_world[i][j][0] = 0
+
+    # Após completar o ciclo infectado imunizado 
+    # o centro volta a ser infectado
+    if counter % (T_IN + T_IM) == 0:
+        new_world[4*N//5][4*N//5] = np.array([0.1, T_IN, 0])
+        new_world[N//5][N//5] = np.array([0.1, T_IN, 0])
+        
     return new_world
 
 def update(frameNum, img, world, N):
@@ -161,17 +172,17 @@ def animation_CA(world):
     ani = animation.FuncAnimation(fig, update, fargs=(img, world, N), frames=15, interval=INTERVAl)
     return ani
 
-def gen_plots(world):
+def iterate(world):
+    global counter
     # definição das variáveis de plotagem
     fig, axes = plt.subplots(2,2)
     gen_axes = (a for a in axes.ravel().tolist())
     infected = np.ndarray(Tc)
     immunized = np.ndarray(Tc)
 
-    counter = 0
     plot_counter = 1
     for i in range(Tc):
-        if i % 10 == 0 and plot_counter<=4:
+        if i % 18 == 0 and plot_counter<=4:
             ax = next(gen_axes) 
             ax.grid()
             ax.set_xticks(np.arange(0.5, N))
