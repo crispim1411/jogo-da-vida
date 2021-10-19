@@ -53,6 +53,9 @@ L = 0.04
 Tc = 85
 T_IN = 15
 T_IM = 30
+START_MOVE = 30
+perc_moves = 40/100
+max_distance = 15
 
 counter = 0
 
@@ -61,24 +64,26 @@ def move(world):
     # a densidade demográfica se torna não-uniforme
     # enquanto não preencher 10% de movimentados
     # após 30 steps irá ter movimentação
+    new_world = world.copy()
     moves_history = []
-    perc_moves = 10/100
     while len(moves_history) < round(N*perc_moves):
         x, y = (random.randint(0, N-1), random.randint(0, N-1))
         if (x,y) not in moves_history:
             # apenas infectados se movendo
-            if world[x][y][1] != 0:
-                x_distance = random.randint(0, 5) # max_distance = 5
-                x_direction = random.choice([1, -1])
-                x_moved = x + x_distance * x_direction
+            # se movendo para fora do centro
+            center = N//2
+            distance = random.randint(1, max_distance)
+            if new_world[x][y][1] != 0:
+                # max_distance = 5
+                x_direction = 1 if x > center else -1
+                x_moved = x + distance * x_direction
                 if x_moved < 0:
                     x_moved = 0
                 elif x_moved > N-1:
                     x_moved = N-1
 
-                y_distance = random.randint(0, 5) # max_distance = 5
-                y_direction = random.choice([1, -1])
-                y_moved = y + y_distance * y_direction
+                y_direction = 1 if y > center else -1
+                y_moved = y + distance * y_direction
                 if y_moved < 0:
                     y_moved = 0
                 elif y_moved > N-1:
@@ -88,14 +93,14 @@ def move(world):
                 a = world[x][y]
                 b = world[x_moved][y_moved]
                 # a se torna vazia
-                world[x][y] = [0, 0, math.inf]
+                new_world[x][y] = [0, 0, math.inf]
                 new_perc = round((a[0] +b[0])/2, 1)
                 if new_perc > 1:
                     new_perc = 1
-                world[x_moved][y_moved] = [new_perc, T_IN, 0]
+                new_world[x_moved][y_moved] = [new_perc, T_IN, 0]
                 moves_history.append((x, y))
-    print(moves_history)
-    return world
+                print(f"{(x,y)} -> {(x_moved,y_moved)} {a} -> {b}: {new_world[x_moved][y_moved]}")
+    return new_world
 
 def tick(world):
     """ update world """
@@ -160,8 +165,8 @@ def tick(world):
     #     new_world[N//5][N//5] = np.array([0.1, T_IN, 0])
 
     # após 30 steps movimenta
-    if counter == 30:
-        new_world = move(new_world)
+    # if counter == START_MOVE:
+    #     new_world = move(new_world)
         
     return new_world
 
