@@ -33,61 +33,69 @@
 # t_in = 5 e t_im = 10
 # 11 estados possíveis para P(t)
 
+import math
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib import animation
 
-N = 30
-INTERVAl = 1000
-FPS = 40
+from utils import to_discrete_value, epidemic_value
+
+N = 100
+INTERVAl = 100
+FPS = 50
 BORDER = True
 
 # Variáveis segundo o artigo
 K = 0.44
 L = 0.04
-Tc = 40
-T_IN = 5
-T_IM = 5
+Tc = 85
+T_IN = 15
+T_IM = 30
 
 counter = 0
 
-def to_discrete_value(value):
-    """Adequa os valores nos intervalos discretos
-    Ex: 0.1 <= 0.122 < 0.2 -> 0.2
-    """
-    if value >= 0.9:
-        return 1.0
-    elif value >= 0.8:
-        return 0.9
-    elif value >= 0.7:
-        return 0.8
-    elif value >= 0.6:
-        return 0.7
-    elif value >= 0.5:
-        return 0.6
-    elif value >= 0.4:
-        return 0.5
-    elif value >= 0.3:
-        return 0.4
-    elif value >= 0.2:
-        return 0.3
-    elif value >= 0.1:
-        return 0.2
-    elif value > 0.0:
-        return 0.1
-    else:
-        return 0
+def move(world):
+    # considerando que ao mover a população de uma célula irá para outro espaço e este ficará vazio
+    # a densidade demográfica se torna não-uniforme
+    # enquanto não preencher 10% de movimentados
+    # após 30 steps irá ter movimentação
+    moves_history = []
+    perc_moves = 10/100
+    while len(moves_history) < round(N*perc_moves):
+        x, y = (random.randint(0, N-1), random.randint(0, N-1))
+        if (x,y) not in moves_history:
+            # apenas infectados se movendo
+            if world[x][y][1] != 0:
+                x_distance = random.randint(0, 5) # max_distance = 5
+                x_direction = random.choice([1, -1])
+                x_moved = x + x_distance * x_direction
+                if x_moved < 0:
+                    x_moved = 0
+                elif x_moved > N-1:
+                    x_moved = N-1
 
-def epidemic_value(cell):
-    """Retorna valor de transmissão da célula"""
-    inf = cell[1]
-    imf = cell[2]
-    # está imune
-    if imf != 0:
-        return 0
-    # suscetível ou infectada
-    return cell[0]
+                y_distance = random.randint(0, 5) # max_distance = 5
+                y_direction = random.choice([1, -1])
+                y_moved = y + y_distance * y_direction
+                if y_moved < 0:
+                    y_moved = 0
+                elif y_moved > N-1:
+                    y_moved = N-1
+
+                # a -> b
+                a = world[x][y]
+                b = world[x_moved][y_moved]
+                # a se torna vazia
+                world[x][y] = [0, 0, math.inf]
+                new_perc = round((a[0] +b[0])/2, 1)
+                if new_perc > 1:
+                    new_perc = 1
+                world[x_moved][y_moved] = [new_perc, T_IN, 0]
+                moves_history.append((x, y))
+    print(moves_history)
+    return world
 
 def tick(world):
     """ update world """
@@ -147,9 +155,13 @@ def tick(world):
 
     # Após completar o ciclo infectado imunizado 
     # o centro volta a ser infectado
-    if counter % (T_IN + T_IM) == 0:
-        new_world[4*N//5][4*N//5] = np.array([0.1, T_IN, 0])
-        new_world[N//5][N//5] = np.array([0.1, T_IN, 0])
+    # if counter % (T_IN + T_IM) == 0:
+    #     new_world[4*N//5][4*N//5] = np.array([0.1, T_IN, 0])
+    #     new_world[N//5][N//5] = np.array([0.1, T_IN, 0])
+
+    # após 30 steps movimenta
+    if counter == 30:
+        new_world = move(new_world)
         
     return new_world
 
@@ -219,12 +231,12 @@ if __name__ == '__main__':
 
     # seta valores iniciais
     # world[0][0] = np.array([0.1, T_IN, 0])
-    # world[N//2][N//2] = np.array([0.1, T_IN, 0])
-    world[4*N//5][4*N//5] = np.array([0.1, T_IN, 0])
-    world[N//5][N//5] = np.array([0.1, T_IN, 0])
+    world[N//2][N//2] = np.array([0.1, T_IN, 0])
+    # world[4*N//5][4*N//5] = np.array([0.1, T_IN, 0])
+    # world[N//5][N//5] = np.array([0.1, T_IN, 0])
 
-    # ani = animation_CA(world)
-    iterate(world)
+    ani = animation_CA(world)
+    #iterate(world)
 
     plt.show()
    
