@@ -240,8 +240,10 @@ if __name__ == '__main__':
     # world[4*N//5][4*N//5] = np.array([0.1, T_IN, 0])
     # world[N//5][N//5] = np.array([0.1, T_IN, 0])
 
-    ani = animation_CA(world)
-    #iterate(world)
+    world[40:45,60:65] = [0, 0, math.inf]
+
+    #ani = animation_CA(world)
+    iterate(world)
 
     plt.show()
    
